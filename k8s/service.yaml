@@ -1,14 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: aplicacion
+  name: aplicacion-service
   labels:
     app: aplicacion
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: aplicacion
   ports:
     - name: http
       port: 80
       targetPort: http
+      protocol: TCP

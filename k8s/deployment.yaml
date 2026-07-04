@@ -13,6 +13,8 @@ spec:
     metadata:
       labels:
         app: aplicacion
+        app.kubernetes.io/name: aplicacion
+        app.kubernetes.io/instance: aplicacion
     spec:
       containers:
         - name: aplicacion

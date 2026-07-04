@@ -36,9 +36,12 @@ steps:
         set -euo pipefail
         IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA"
         gcloud container clusters get-credentials "${_GKE_CLUSTER}" --region="${_GKE_LOCATION}"
+        kubectl delete service aplicacion --ignore-not-found -n "${_K8S_NAMESPACE}"
         kubectl apply -f k8s/service.yaml -n "${_K8S_NAMESPACE}"
         sed "s|IMAGE_PLACEHOLDER|$$IMAGE|g" k8s/deployment.yaml | kubectl apply -n "${_K8S_NAMESPACE}" -f -
         kubectl rollout status deployment/aplicacion -n "${_K8S_NAMESPACE}" --timeout=5m
+        kubectl get service aplicacion-service -n "${_K8S_NAMESPACE}"
+        kubectl get endpoints aplicacion-service -n "${_K8S_NAMESPACE}"
 
 images:
   - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA
