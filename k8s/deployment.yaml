@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: aplicacion
-          image: aplicacion
+          image: IMAGE_PLACEHOLDER
           ports:
             - containerPort: 80
               name: http
