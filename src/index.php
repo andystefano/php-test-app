@@ -11,27 +11,35 @@ if (str_contains($ip, ',')) {
     $ip = trim(explode(',', $ip)[0]);
 }
 
+$metodo = $_SERVER['REQUEST_METHOD'] ?? 'DESCONOCIDO';
 $rawBody = file_get_contents('php://input') ?: '';
-$parsedBody = null;
+$contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? null;
 
+$bodyParsed = null;
 if ($rawBody !== '') {
     $json = json_decode($rawBody, true);
-    $parsedBody = json_last_error() === JSON_ERROR_NONE ? $json : $rawBody;
+    $bodyParsed = json_last_error() === JSON_ERROR_NONE ? $json : $rawBody;
 }
 
 $request = [
-    'metodo'   => $_SERVER['REQUEST_METHOD'] ?? 'DESCONOCIDO',
-    'uri'      => $_SERVER['REQUEST_URI'] ?? '/',
-    'query'    => $_GET,
-    'post'     => $_POST,
-    'body'     => $parsedBody,
-    'headers'  => obtenerHeaders(),
-    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+    'metodo'       => $metodo,
+    'uri'          => $_SERVER['REQUEST_URI'] ?? '/',
+    'query'        => $_GET,
+    'post'         => $_POST,
+    'content_type' => $contentType,
+    'raw_body'     => strtoupper($metodo) === 'POST' ? $rawBody : null,
+    'body'         => $bodyParsed,
+    'headers'      => obtenerHeaders(),
+    'user_agent'   => $_SERVER['HTTP_USER_AGENT'] ?? null,
 ];
+
+$detalle = strtoupper($metodo) === 'POST' && $rawBody !== ''
+    ? 'Petición POST recibida con body raw'
+    : 'Petición recibida en index.php';
 
 error_log(json_encode([
     'concepto'       => 'solicitud_http',
-    'detalle'        => 'Petición recibida en index.php',
+    'detalle'        => $detalle,
     'ip'             => $ip,
     'ubicacion'      => $_SERVER['REQUEST_URI'] ?? '/',
     'tipo_log_id'    => 1,
