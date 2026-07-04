@@ -37,11 +37,17 @@ steps:
         IMAGE="${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA"
         gcloud container clusters get-credentials "${_GKE_CLUSTER}" --region="${_GKE_LOCATION}"
         kubectl delete service aplicacion --ignore-not-found -n "${_K8S_NAMESPACE}"
+        kubectl delete service aplicacion-service --ignore-not-found -n "${_K8S_NAMESPACE}"
         kubectl apply -f k8s/service.yaml -n "${_K8S_NAMESPACE}"
         sed "s|IMAGE_PLACEHOLDER|$$IMAGE|g" k8s/deployment.yaml | kubectl apply -n "${_K8S_NAMESPACE}" -f -
         kubectl rollout status deployment/aplicacion -n "${_K8S_NAMESPACE}" --timeout=5m
-        kubectl get service aplicacion-service -n "${_K8S_NAMESPACE}"
+        kubectl apply -f k8s/ingress.yaml -n "${_K8S_NAMESPACE}"
+        echo "=== Diagnostico ==="
+        kubectl get pods -l app=aplicacion -n "${_K8S_NAMESPACE}"
         kubectl get endpoints aplicacion-service -n "${_K8S_NAMESPACE}"
+        kubectl get ingress aplicacion-ingress -n "${_K8S_NAMESPACE}"
+        kubectl run curl-test-$SHORT_SHA --rm -i --restart=Never --image=curlimages/curl:latest -n "${_K8S_NAMESPACE}" -- \
+          curl -sf http://aplicacion-service.default.svc.cluster.local || echo "curl interno fallo"
 
 images:
   - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA
