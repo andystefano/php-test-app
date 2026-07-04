@@ -27,17 +27,17 @@ $request = [
     'query'        => $_GET,
     'post'         => $_POST,
     'content_type' => $contentType,
-    'raw_body'     => strtoupper($metodo) === 'POST' ? $rawBody : null,
+    'raw_body'     => $rawBody,
     'body'         => $bodyParsed,
     'headers'      => obtenerHeaders(),
     'user_agent'   => $_SERVER['HTTP_USER_AGENT'] ?? null,
 ];
 
-$detalle = strtoupper($metodo) === 'POST' && $rawBody !== ''
-    ? 'Petición POST recibida con body raw'
+$detalle = $rawBody !== ''
+    ? 'Petición recibida con body raw'
     : 'Petición recibida en index.php';
 
-error_log(json_encode([
+$payload = [
     'concepto'       => 'solicitud_http',
     'detalle'        => $detalle,
     'ip'             => $ip,
@@ -46,7 +46,18 @@ error_log(json_encode([
     'transaccion_id' => uniqid('req_', true),
     'fecha'          => $fecha,
     'request'        => $request,
-], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+];
+
+$logLine = json_encode(
+    $payload,
+    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR
+);
+
+if ($logLine === false) {
+    $logLine = 'solicitud_http | error json_encode: ' . json_last_error_msg() . ' | raw_body=' . $rawBody;
+}
+
+error_log($logLine);
 
 echo 'solicitud recibida';
 
