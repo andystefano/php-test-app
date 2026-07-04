@@ -5,7 +5,8 @@ metadata:
   labels:
     app: aplicacion
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
   selector:
     app: aplicacion
   ports:
