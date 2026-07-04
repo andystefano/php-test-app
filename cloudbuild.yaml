@@ -1,0 +1,42 @@
+substitutions:
+  _GKE_CLUSTER: autopilot-cluster-1
+  _GKE_LOCATION: us-central1
+  _AR_REGION: us-central1
+  _AR_REPOSITORY: aplicacion
+  _IMAGE_NAME: aplicacion
+  _K8S_NAMESPACE: default
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    id: Build
+    args:
+      - build
+      - -t
+      - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA
+      - -t
+      - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE_NAME}:latest
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    id: Push
+    args:
+      - push
+      - --all-tags
+      - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE_NAME}
+
+  - name: gcr.io/cloud-builders/gke-deploy
+    id: Deploy
+    args:
+      - run
+      - --filename=k8s/
+      - --image=${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA
+      - --location=${_GKE_LOCATION}
+      - --cluster=${_GKE_CLUSTER}
+      - --namespace=${_K8S_NAMESPACE}
+
+images:
+  - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA
+  - ${_AR_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPOSITORY}/${_IMAGE_NAME}:latest
