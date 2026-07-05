@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 header('Content-Type: text/plain; charset=utf-8');
 
+$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+if (str_contains($userAgent, 'kube-probe')) {
+    echo 'ok';
+    return;
+}
+
 $fecha = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
 
 $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'desconocida';
@@ -20,6 +26,7 @@ if ($rawBody !== '') {
     $json = json_decode($rawBody, true);
     $bodyParsed = json_last_error() === JSON_ERROR_NONE ? $json : $rawBody;
 }
+
 
 $request = [
     'metodo'       => $metodo,
