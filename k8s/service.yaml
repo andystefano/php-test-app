@@ -5,6 +5,8 @@ metadata:
   labels:
     app: aplicacion
 spec:
+  # loadBalancerIP se inyecta en Cloud Build desde la sustitucion _LB_STATIC_IP
+  # (IP estatica regional reservada). Si esta vacia, se usa una IP efimera.
   type: LoadBalancer
   externalTrafficPolicy: Cluster
   selector:
