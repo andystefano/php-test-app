@@ -44,7 +44,7 @@ $detalle = $rawBody !== ''
     ? 'Petición recibida con body raw'
     : 'Petición recibida en index.php';
 
-$payload = [
+$base = [
     'concepto'       => 'solicitud_http',
     'detalle'        => $detalle,
     'ip'             => $ip,
@@ -55,18 +55,34 @@ $payload = [
     'request'        => $request,
 ];
 
-$logLine = json_encode(
-    $payload,
-    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR
-);
-
-if ($logLine === false) {
-    $logLine = 'solicitud_http | error json_encode: ' . json_last_error_msg() . ' | raw_body=' . $rawBody;
+// A modo de ejemplo, se registra la misma petición con distintos niveles de severity.
+$severities = ['DEBUG', 'INFO', 'NOTICE', 'WARNING', 'ERROR', 'CRITICAL'];
+foreach ($severities as $severity) {
+    registrarLog($severity, $base, $rawBody);
 }
 
-error_log($logLine);
-
 echo 'solicitud recibida';
+
+function registrarLog(string $severity, array $base, string $rawBody): void
+{
+    $payload = array_merge(['severity' => $severity], $base);
+
+    $logLine = json_encode(
+        $payload,
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR
+    );
+
+    if ($logLine === false) {
+        $logLine = json_encode([
+            'severity' => 'ERROR',
+            'concepto' => 'solicitud_http',
+            'detalle'  => 'error json_encode: ' . json_last_error_msg(),
+            'raw_body' => $rawBody,
+        ]);
+    }
+
+    error_log($logLine);
+}
 
 function obtenerHeaders(): array
 {
